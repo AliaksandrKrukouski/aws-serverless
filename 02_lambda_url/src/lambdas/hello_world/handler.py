@@ -29,12 +29,12 @@ class HelloWorld(AbstractLambda):
         }
 
         bad_result = {
-            "statusCode": 404,
+            "statusCode": 400,
             "headers": {
                 "Content-Type": "application/json",
             },
             "body": {
-                "statusCode": 404,
+                "statusCode": 400,
                 "message": f"Bad request syntax or unsupported method. Request path: {path}. HTTP method: {method}"
             }
         }
