@@ -1,0 +1,7 @@
+{
+  "StatementId": "AllowInvokeLambdaFromAPIGateway",
+  "Action": "lambda:InvokeFunction",
+  "FunctionName": "arn:aws:lambda:eu-central-1:905418349556:function:cmtr-e858adde-iam-lp-lambda",
+  "Principal": "apigateway.amazonaws.com",
+  "SourceArn": "arn:aws:execute-api:eu-central-1:905418349556:z31nh8irl0/*/*/get_list"
+}
