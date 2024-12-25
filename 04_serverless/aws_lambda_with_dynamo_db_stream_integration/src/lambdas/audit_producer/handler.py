@@ -33,6 +33,7 @@ class AuditProducer(AbstractLambda):
         item_key = record["dynamodb"]["Keys"]["key"]["S"]
         modification_time = \
             datetime.utcfromtimestamp(record["dynamodb"]["ApproximateCreationDateTime"]).strftime(DATE_FORMAT)
+        event_name = record.get('eventName')
 
         item = {
             'id': item_id,
@@ -40,15 +41,17 @@ class AuditProducer(AbstractLambda):
             'modificationTime': modification_time
         }
 
-        if record.get('eventName') == "INSERT":
+        if event_name == "INSERT":
+            _LOG.info("Insert event")
             item["newValue"] = {
                 "key": record["dynamodb"]["NewImage"]["key"]["S"],
-                "value": record["dynamodb"]["NewImage"]["value"]["S"]
+                "value": record["dynamodb"]["NewImage"]["value"]["N"]
             }
-        elif record.get('eventName') == "MODIFY":
+        elif event_name == "MODIFY":
+            _LOG.info("Modify event")
             item["updatedAttribute"] = "value"
-            item["oldValue"] = record["dynamodb"]["OldImage"]["value"]["S"]
-            item["newValue"] = record["dynamodb"]["NewImage"]["value"]["S"]
+            item["oldValue"] = record["dynamodb"]["OldImage"]["value"]["N"]
+            item["newValue"] = record["dynamodb"]["NewImage"]["value"]["N"]
         else:
             raise ValueError(f"Unsupported event type: {record.get('eventName')}")
 
