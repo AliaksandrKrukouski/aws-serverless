@@ -14,29 +14,7 @@ class TestSuccess(AuditProducerLambdaTestCase):
         mock_resource.Table.return_value = mock_table
         mock_table.put_item.return_value = {'ResponseMetadata': {'HTTPStatusCode': 200}}
 
-        mock_event = {
-            "Records": [
-                {
-                    "dynamodb": {
-                        "Keys": {
-                            "key": {
-                                "S": "test_id"
-                            }
-                        },
-                        "ApproximateCreationDateTime": 1616560000,
-                        "NewImage": {
-                            "key": {
-                                "S": "test_key"
-                            },
-                            "value": {
-                                "S": "test_value"
-                            }
-                        }
-                    },
-                    "eventName": "INSERT"
-                }
-            ]
-        }
+        mock_event = {'Records': [{'dynamodb': {'Keys': {'key': {'S': 'test_id'}}, 'ApproximateCreationDateTime': 1616560000, 'NewImage': {'key': {'S': 'test_key'}, 'value': {'S': 'test_value'}}}, 'eventName': 'INSERT'}]}
 
         self.assertEqual(self.HANDLER.handle_request(mock_event, dict()), 200)
 
