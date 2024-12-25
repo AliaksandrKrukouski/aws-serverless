@@ -49,7 +49,7 @@ class AuditProducer(AbstractLambda):
             elif event_name == "MODIFY":
                 _LOG.info("Modify event")
 
-                item["updatedAttribute"] = "value"
+                item["updatedAttribute"] = {"S": "value"}
                 item["oldValue"] = record["dynamodb"]["OldImage"]["value"]
                 item["newValue"] = record["dynamodb"]["NewImage"]["value"]
             else:
