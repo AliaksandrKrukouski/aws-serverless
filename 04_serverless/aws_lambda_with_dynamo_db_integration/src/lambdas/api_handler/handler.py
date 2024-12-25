@@ -10,7 +10,7 @@ import uuid
 
 _LOG = get_logger('ApiHandler-handler')
 
-DB_TABLE_NAME = os.environ.get('table_name')
+DB_TABLE_NAME = os.environ.get('target_table')
 
 
 class ApiHandler(AbstractLambda):
