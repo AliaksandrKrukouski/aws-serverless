@@ -1,3 +1,5 @@
+import os
+
 from commons.log_helper import get_logger
 from commons.abstract_lambda import AbstractLambda
 
@@ -8,7 +10,7 @@ import uuid
 
 _LOG = get_logger('ApiHandler-handler')
 
-DB_TABLE_NAME = 'cmtr-e858adde-Events'
+DB_TABLE_NAME = os.environ.get('table_name')
 
 
 class ApiHandler(AbstractLambda):
@@ -23,23 +25,23 @@ class ApiHandler(AbstractLambda):
         # todo implement business logic
         _LOG.info("Input event: %s", event)
 
-        client = boto3.client('dynamodb')
+        dynamo_db = boto3.resource('dynamodb')
+        dynamo_table = dynamo_db.Table(DB_TABLE_NAME)
 
         item_id = str(uuid.uuid4())
         principal_id = event['principalId']
         created_at = datetime.utcnow().isoformat()[:-3] + "Z"
-        content = event['content']
+        body = event['content']
 
         item = {
-            'id': {'S': item_id},
-            'principalId': {'N': str(principal_id)},
-            'createdAt': {'S': created_at},
-            'body': {'M': {key: {'S': value} for key, value in content.items()}}
+            'id': item_id,
+            'principalId': principal_id,
+            'createdAt': created_at,
+            'body': body
         }
 
         _LOG.info("Put item: %s", item)
-        response = client.put_item(TableName=DB_TABLE_NAME,
-                                   Item=item)
+        response = dynamo_table.put_item(Item=item)
 
         _LOG.info("Response: %s", response)
 
@@ -49,9 +51,9 @@ class ApiHandler(AbstractLambda):
                 "id": item_id,
                 "principalId": principal_id,
                 "createdAt": created_at,
-                "body": content
+                "body": body
             }
-}
+        }
 
 
 HANDLER = ApiHandler()

@@ -3,17 +3,20 @@ from unittest.mock import MagicMock, patch
 
 class TestSuccess(ApiHandlerLambdaTestCase):
 
-    @patch('src.lambdas.api_handler.handler.boto3.client')
-    def test_success(self, mock_boto_client):
-        mock_client = MagicMock()
-        mock_boto_client.return_value = mock_client
-        mock_client.put_item.return_value = {'ResponseMetadata': {'HTTPStatusCode': 200}}
+    @patch('src.lambdas.api_handler.handler.boto3.resource')
+    def test_success(self, mock_boto_resource):
+        mock_resource = MagicMock()
+        mock_boto_resource.return_value = mock_resource
+
+        mock_table = MagicMock()
+        mock_resource.Table.return_value = mock_table
+        mock_table.put_item.return_value = {'ResponseMetadata': {'HTTPStatusCode': 200}}
 
         mock_event = {
             'principalId': 'test_principal_id',
             'content': {
-                'key1': {'S': 'value1'},
-                'key2': {'S': 'value2'}
+                'key1':  'value1',
+                'key2': 'value2'
             }
         }
 
