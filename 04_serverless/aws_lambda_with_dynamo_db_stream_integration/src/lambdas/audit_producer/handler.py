@@ -49,7 +49,7 @@ class AuditProducer(AbstractLambda):
 
             item["newValue"] = {
                 "key": key,
-                "value": value.get("S", value.get("N"))
+                "value": value.get("S", int(value.get("N")))
             }
         elif event_name == "MODIFY":
             _LOG.info("Modify event")
@@ -58,8 +58,8 @@ class AuditProducer(AbstractLambda):
             new_value = record["dynamodb"]["NewImage"]["value"]
 
             item["updatedAttribute"] = "value"
-            item["oldValue"] = old_value.get("S", old_value.get("N"))
-            item["newValue"] = new_value.get("S", new_value.get("N"))
+            item["oldValue"] = old_value.get("S", int(old_value.get("N")))
+            item["newValue"] = new_value.get("S", int(new_value.get("N")))
         else:
             raise ValueError(f"Unsupported event type: {record.get('eventName')}")
 
