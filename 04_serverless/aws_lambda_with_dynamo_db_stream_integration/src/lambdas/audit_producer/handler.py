@@ -22,51 +22,43 @@ class AuditProducer(AbstractLambda):
         Explain incoming event here
         """
         # todo implement business logic
-        dynamo_db = boto3.resource('dynamodb')
-        dynamo_table = dynamo_db.Table(TARGET_TABLE)
+        dynamo_db = boto3.client('dynamodb')
 
         _LOG.info("Received event: %s", event)
 
-        record = event.get('Records')[0]
+        for record in event.get('Records'):
+            item_id = str(uuid.uuid4())
+            item_key = record["dynamodb"]["Keys"]["key"]["S"]
+            modification_time = \
+                datetime.utcfromtimestamp(record["dynamodb"]["ApproximateCreationDateTime"]).strftime(DATE_FORMAT)
+            event_name = record["eventName"]
 
-        item_id = str(uuid.uuid4())
-        item_key = record["dynamodb"]["Keys"]["key"]["S"]
-        modification_time = \
-            datetime.utcfromtimestamp(record["dynamodb"]["ApproximateCreationDateTime"]).strftime(DATE_FORMAT)
-        event_name = record["eventName"]
-
-        item = {
-            'id': item_id,
-            'itemKey': item_key,
-            'modificationTime': modification_time
-        }
-
-        if event_name == "INSERT":
-            _LOG.info("Insert event")
-
-            key = record["dynamodb"]["NewImage"]["key"]["S"]
-            value = record["dynamodb"]["NewImage"]["value"]
-
-            item["newValue"] = {
-                "key": key,
-                "value": value.get("S", int(value.get("N")))
+            item = {
+                'id': {"S": item_id},
+                'itemKey': {"S": item_key},
+                'modificationTime': {"S": modification_time}
             }
-        elif event_name == "MODIFY":
-            _LOG.info("Modify event")
 
-            old_value = record["dynamodb"]["OldImage"]["value"]
-            new_value = record["dynamodb"]["NewImage"]["value"]
+            if event_name == "INSERT":
+                _LOG.info("Insert event")
 
-            item["updatedAttribute"] = "value"
-            item["oldValue"] = old_value.get("S", int(old_value.get("N")))
-            item["newValue"] = new_value.get("S", int(new_value.get("N")))
-        else:
-            raise ValueError(f"Unsupported event type: {record.get('eventName')}")
+                new_image = record["dynamodb"]["NewImage"]
+                item["newValue"] = {
+                    "M": new_image
+                }
+            elif event_name == "MODIFY":
+                _LOG.info("Modify event")
 
-        _LOG.info("Put item: %s", item)
-        response = dynamo_table.put_item(Item=item)
+                item["updatedAttribute"] = "value"
+                item["oldValue"] = record["dynamodb"]["OldImage"]["value"]
+                item["newValue"] = record["dynamodb"]["NewImage"]["value"]
+            else:
+                raise ValueError(f"Unsupported event type: {record.get('eventName')}")
 
-        _LOG.info("Response: %s", response)
+            _LOG.info("Put item: %s", item)
+            response = dynamo_db.put_item(TableName=TARGET_TABLE, Item=item)
+
+            _LOG.info("Response: %s", response)
 
         return 200
     
