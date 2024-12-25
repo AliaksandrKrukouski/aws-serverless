@@ -10,7 +10,6 @@ from commons.abstract_lambda import AbstractLambda
 _LOG = get_logger('AuditProducer-handler')
 
 DATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
-SOURCE_TABLE = os.environ.get('source_table')
 TARGET_TABLE = os.environ.get('target_table')
 
 class AuditProducer(AbstractLambda):
