@@ -43,15 +43,23 @@ class AuditProducer(AbstractLambda):
 
         if event_name == "INSERT":
             _LOG.info("Insert event")
+
+            key = record["dynamodb"]["NewImage"]["key"]["S"]
+            value = record["dynamodb"]["NewImage"]["value"]
+
             item["newValue"] = {
-                "key": record["dynamodb"]["NewImage"]["key"]["S"],
-                "value": record["dynamodb"]["NewImage"]["value"]["S"]
+                "key": key,
+                "value": value.get("S", value.get("N"))
             }
         elif event_name == "MODIFY":
             _LOG.info("Modify event")
+
+            old_value = record["dynamodb"]["OldImage"]["value"]
+            new_value = record["dynamodb"]["NewImage"]["value"]
+
             item["updatedAttribute"] = "value"
-            item["oldValue"] = record["dynamodb"]["OldImage"]["value"]["S"]
-            item["newValue"] = record["dynamodb"]["NewImage"]["value"]["S"]
+            item["oldValue"] = old_value.get("S", old_value.get("N"))
+            item["newValue"] = new_value.get("S", new_value.get("N"))
         else:
             raise ValueError(f"Unsupported event type: {record.get('eventName')}")
 
