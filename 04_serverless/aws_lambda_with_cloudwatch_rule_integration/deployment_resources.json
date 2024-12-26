@@ -39,7 +39,7 @@
     },
     "tags": {}
   },
-  "uuid-trigger": {
+  "uuid_trigger": {
     "resource_type": "cloudwatch_rule",
     "rule_type": "schedule",
     "tags": {},
