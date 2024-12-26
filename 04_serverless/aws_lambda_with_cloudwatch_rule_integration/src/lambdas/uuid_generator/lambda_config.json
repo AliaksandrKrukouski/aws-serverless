@@ -12,7 +12,7 @@
   "event_sources": [
     {
       "resource_type": "cloudwatch_rule_trigger",
-      "target_rule": "uuid-trigger"
+      "target_rule": "uuid_trigger"
     }
   ],
   "env_variables": {
