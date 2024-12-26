@@ -1,3 +1,4 @@
+import json
 import os
 import uuid
 from datetime import datetime
@@ -30,7 +31,7 @@ class UuidGenerator(AbstractLambda):
         s3_client = boto3.client('s3')
 
         _LOG.info('Uploading data to s3://%s/%s', TARGET_BUCKET, filename)
-        response = s3_client.put_object(Bucket=TARGET_BUCKET, Key=filename, Body=str(data))
+        response = s3_client.put_object(Bucket=TARGET_BUCKET, Key=filename, Body=json.dumps(data))
 
         _LOG.info('Response: %s', response)
 
