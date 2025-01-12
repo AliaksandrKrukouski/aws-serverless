@@ -84,10 +84,12 @@ def _build_tables_item(data):
 
     id_ = str(data.get("id", ""))
     number_ = str(data.get("number", ""))
+    places = str(data.get("places", ""))
     is_vip = data.get("isVip", "")
     min_order = str(data.get("minOrder", ""))
     _LOG.info("id: %s", id_)
     _LOG.info("number: %s", number_)
+    _LOG.info("places: %s", places)
     _LOG.info("isVip: %s", is_vip)
     _LOG.info("minOrder: %s", min_order)
 
@@ -97,6 +99,9 @@ def _build_tables_item(data):
         },
         "number": {
             "N": number_
+        },
+        "places": {
+            "N": places
         },
         "isVip": {
             "BOOL": is_vip
