@@ -171,16 +171,16 @@ def _build_tables_item_func(item):
     return item
 
 
-def _build_reservations_item_str_func(item):
-    item_str = '{' + \
-               '"tableNumber": ' + str(item.get("table_number", "")) + \
-               ', "clientName": "' + item.get("client_name", "") + '"' + \
-               ', "phoneNumber": "' + item.get("phone_number", "") + '"' + \
-               ', "date": "' + item.get("date", "") + '"' + \
-               ', "slotTimeStart": "' + item.get("slot_time_start", "") + '"' + \
-               ', "slotTimeEnd": "' + item.get("slot_time_end", "") + '"' + \
-               '}'
-    return item_str
+def _build_reservations_item_func(item):
+    item = {
+        "tableNumber": int(item.get("table_number", "")),
+        "clientName":  item.get("client_name", ""),
+        "phoneNumber": item.get("phone_number", ""),
+        "date": item.get("date", ""),
+        "slotTimeStart": item.get("slot_time_start", ""),
+        "slotTimeEnd": item.get("slot_time_end", "")
+    }
+    return item
 
 
 def _post_table_item(dynamodb_client, table_name, item, callback_body_template):
@@ -295,7 +295,7 @@ class ApiHandler(AbstractLambda):
                 result = _post_table_item(dynamodb_client, table_name, table_item, '{"reservationId": "%s"}')
             elif resource_path == "/reservations" and http_method == "GET":
                 table_name = os.environ['reservations_table']
-                result = _get_table_items(dynamodb_resource, table_name, _build_reservations_item_str_func)
+                result = _get_table_items(dynamodb_resource, table_name, _build_reservations_item_func)
             else:
                 raise Exception(f"Unsupported resource path: {resource_path} and http method: {http_method}")
         except Exception as e:
