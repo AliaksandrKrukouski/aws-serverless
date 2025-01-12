@@ -231,7 +231,7 @@ def _get_table_items(dynamodb_resource, table_name, build_item_str_func, key_con
 
     _LOG.info("Body: %s", body)
 
-    return {"statusCode": 200, "body": str(body)}
+    return {"statusCode": 200, "body": json.dumps(body, indent=4)}
 
 
 class ApiHandler(AbstractLambda):
