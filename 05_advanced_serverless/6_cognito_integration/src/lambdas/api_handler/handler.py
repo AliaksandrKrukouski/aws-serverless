@@ -160,15 +160,15 @@ def _build_reservations_item(data):
     return item
 
 
-def _build_tables_item_str_func(item):
-    item_str = '{' + \
-               '"id": ' + str(item.get("id", "")) + \
-               ', "number": ' + str(item.get("number", "")) + \
-               ', "places": ' + str(item.get("places", "")) + \
-               ', "isVip": ' + str(item.get("isVip", "")) + \
-               ', "minOrder": ' + str(item.get("minOrder", "")) + \
-               '}'
-    return item_str
+def _build_tables_item_func(item):
+    item = {
+        "id": int(item.get("id")),
+        "number": int(item.get("number")),
+        "places": int(item.get("places")),
+        "isVip": item.get("isVip"),
+        "minOrder": int(item.get("minOrder"))
+    }
+    return item
 
 
 def _build_reservations_item_str_func(item):
@@ -227,17 +227,11 @@ def _get_table_items(dynamodb_resource, table_name, build_item_str_func, key_con
     if key_condition_expression:
         body = items[0]
     else:
-        items_str = ', '.join(items)
-        if table_name == os.environ['tables_table']:
-            body = '{"tables": [' + items_str + ']}'
-        elif table_name == os.environ['reservations_table']:
-            body = '{"reservations": [' + items_str + ']}'
-        else:
-            raise Exception(f"Unsupported table name: {table_name}")
+        body = {"tables": items} if table_name == os.environ['tables_table'] else {"reservations": items}
 
     _LOG.info("Body: %s", body)
 
-    return {"statusCode": 200, "body": body}
+    return {"statusCode": 200, "body": str(body)}
 
 
 class ApiHandler(AbstractLambda):
@@ -293,7 +287,7 @@ class ApiHandler(AbstractLambda):
                     _LOG.info("No path parameters provided")
                     key_condition_expression = None
 
-                result = _get_table_items(dynamodb_resource, table_name, _build_tables_item_str_func,
+                result = _get_table_items(dynamodb_resource, table_name, _build_tables_item_func,
                                           key_condition_expression)
             elif resource_path == "/reservations" and http_method == "POST":
                 table_name = os.environ['reservations_table']
