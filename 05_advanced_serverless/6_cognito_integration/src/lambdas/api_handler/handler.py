@@ -178,7 +178,7 @@ def _build_reservations_item_str_func(item):
     return item_str
 
 
-def _post_table_item(dynamodb_client, table_name, item, callback_body_template='{"id": "%s"}'):
+def _post_table_item(dynamodb_client, table_name, item, callback_body_template):
     _LOG.info("Posting to %s table:\n%s", table_name, item)
 
     _LOG.info("Put item: %s", item)
@@ -273,7 +273,7 @@ class ApiHandler(AbstractLambda):
             elif resource_path == "/tables" and http_method == "POST":
                 table_name = os.environ['tables_table']
                 table_item = _build_tables_item(body)
-                result = _post_table_item(dynamodb_client, table_name, table_item)
+                result = _post_table_item(dynamodb_client, table_name, table_item, '{"tableId": %s}')
             elif resource_path.startswith("/tables") and http_method == "GET":
                 table_name = os.environ['tables_table']
 
