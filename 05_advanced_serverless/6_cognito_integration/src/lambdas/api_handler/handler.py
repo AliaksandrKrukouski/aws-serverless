@@ -265,39 +265,43 @@ class ApiHandler(AbstractLambda):
         client_id = os.environ['cup_client_id']
         _LOG.info("User pool id: %s", user_pool_id)
 
-        if resource_path == "/signup" and http_method == "POST":
-            result = _signup(cognito_client, user_pool_id, client_id, body)
-        elif resource_path == "/signin" and http_method == "POST":
-            result = _signin(cognito_client, user_pool_id, client_id, body)
-        elif resource_path == "/tables" and http_method == "POST":
-            table_name = os.environ['tables_table']
-            table_item = _build_tables_item(body)
-            result = _post_table_item(dynamodb_client, table_name, table_item)
-        elif resource_path.startswith("/tables") and http_method == "GET":
-            table_name = os.environ['tables_table']
+        try:
+            if resource_path == "/signup" and http_method == "POST":
+                result = _signup(cognito_client, user_pool_id, client_id, body)
+            elif resource_path == "/signin" and http_method == "POST":
+                result = _signin(cognito_client, user_pool_id, client_id, body)
+            elif resource_path == "/tables" and http_method == "POST":
+                table_name = os.environ['tables_table']
+                table_item = _build_tables_item(body)
+                result = _post_table_item(dynamodb_client, table_name, table_item)
+            elif resource_path.startswith("/tables") and http_method == "GET":
+                table_name = os.environ['tables_table']
 
-            path_parameters = event.get("pathParameters")
-            if path_parameters:
-                _LOG.info("Path parameters: %s", path_parameters)
+                path_parameters = event.get("pathParameters")
+                if path_parameters:
+                    _LOG.info("Path parameters: %s", path_parameters)
 
-                table_id = path_parameters.get("tableId")
-                _LOG.info("Building key condition expression for table id: %s", table_id)
-                key_condition_expression = Key("id").eq(int(table_id))
+                    table_id = path_parameters.get("tableId")
+                    _LOG.info("Building key condition expression for table id: %s", table_id)
+                    key_condition_expression = Key("id").eq(int(table_id))
+                else:
+                    _LOG.info("No path parameters provided")
+                    key_condition_expression = None
+
+                result = _get_table_items(dynamodb_resource, table_name, _build_tables_item_str_func,
+                                          key_condition_expression)
+            elif resource_path == "/reservations" and http_method == "POST":
+                table_name = os.environ['reservations_table']
+                table_item = _build_reservations_item(body)
+                result = _post_table_item(dynamodb_client, table_name, table_item, '{"reservationId": "%s"}')
+            elif resource_path == "/reservations" and http_method == "GET":
+                table_name = os.environ['reservations_table']
+                result = _get_table_items(dynamodb_resource, table_name, _build_reservations_item_str_func)
             else:
-                _LOG.info("No path parameters provided")
-                key_condition_expression = None
-
-            result = _get_table_items(dynamodb_resource, table_name, _build_tables_item_str_func,
-                                      key_condition_expression)
-        elif resource_path == "/reservations" and http_method == "POST":
-            table_name = os.environ['reservations_table']
-            table_item = _build_reservations_item(body)
-            result = _post_table_item(dynamodb_client, table_name, table_item, '{"reservationId": "%s"}')
-        elif resource_path == "/reservations" and http_method == "GET":
-            table_name = os.environ['reservations_table']
-            result = _get_table_items(dynamodb_resource, table_name, _build_reservations_item_str_func)
-        else:
-            raise Exception(f"Unsupported resource path: {resource_path} and http method: {http_method}")
+                raise Exception(f"Unsupported resource path: {resource_path} and http method: {http_method}")
+        except Exception as e:
+            _LOG.error("Error: %s", e)
+            result = {"statusCode": 500, "body": str(e)}
 
         return result
     
