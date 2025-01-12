@@ -161,8 +161,8 @@ def _build_reservations_item(data):
 
 
 def _build_tables_item_str_func(item):
-    item_str = '{ ' + \
-               '  "id": ' + str(item.get("id", "")) + \
+    item_str = '{' + \
+               '"id": ' + str(item.get("id", "")) + \
                ', "number": ' + str(item.get("number", "")) + \
                ', "places": ' + str(item.get("places", "")) + \
                ', "isVip": ' + str(item.get("isVip", "")) + \
@@ -172,8 +172,8 @@ def _build_tables_item_str_func(item):
 
 
 def _build_reservations_item_str_func(item):
-    item_str = '{ ' + \
-               '  "tableNumber": ' + str(item.get("table_number", "")) + \
+    item_str = '{' + \
+               '"tableNumber": ' + str(item.get("table_number", "")) + \
                ', "clientName": "' + item.get("client_name", "") + '"' + \
                ', "phoneNumber": "' + item.get("phone_number", "") + '"' + \
                ', "date": "' + item.get("date", "") + '"' + \
