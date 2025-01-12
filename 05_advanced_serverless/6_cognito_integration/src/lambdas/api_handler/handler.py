@@ -273,7 +273,7 @@ class ApiHandler(AbstractLambda):
             elif resource_path == "/tables" and http_method == "POST":
                 table_name = os.environ['tables_table']
                 table_item = _build_tables_item(body)
-                result = _post_table_item(dynamodb_client, table_name, table_item, '{"tableId": %s}')
+                result = _post_table_item(dynamodb_client, table_name, table_item, '{"id": %s}')
             elif resource_path.startswith("/tables") and http_method == "GET":
                 table_name = os.environ['tables_table']
 
