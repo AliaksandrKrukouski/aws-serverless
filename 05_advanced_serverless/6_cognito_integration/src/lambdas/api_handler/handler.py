@@ -301,7 +301,7 @@ class ApiHandler(AbstractLambda):
                 raise Exception(f"Unsupported resource path: {resource_path} and http method: {http_method}")
         except Exception as e:
             _LOG.error("Error: %s", e)
-            result = {"statusCode": 500, "body": str(e)}
+            result = {"statusCode": 400, "body": str(e)}
 
         return result
     
