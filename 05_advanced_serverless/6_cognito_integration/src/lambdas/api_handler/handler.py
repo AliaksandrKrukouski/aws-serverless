@@ -114,6 +114,33 @@ def _build_tables_item(data):
     return item
 
 
+def _is_table_availability(dynamodb_client, table_number, date, slot_time_start, slot_time_end):
+    _LOG.info("Check if table exists")
+    table_name = os.environ['tables_table']
+    table_key = {"id": {"N": table_number}}
+    table_item = dynamodb_client.get_item(TableName=table_name, Key=table_key)
+    _LOG.info("Table item: %s", table_item)
+    if table_item.get("Item") is None:
+        raise Exception(f"Table with number {table_number} does not exist")
+
+    _LOG.info("Check if table is available")
+    reservations_table_name = os.environ['reservations_table']
+    filter_expression = 'table_number = :table_number AND #date = :date ' \
+        'AND (slot_time_start BETWEEN :slot_time_start AND :slot_time_end ' \
+        'OR slot_time_end BETWEEN :slot_time_start AND :slot_time_end)'
+    expression_attribute_values = {":table_number": {"N": table_number},
+                                   ":date": {"S": date},
+                                   ":slot_time_start": {"S": slot_time_start},
+                                   ":slot_time_end": {"S": slot_time_end}
+                                   }
+    response = dynamodb_client.scan(TableName=reservations_table_name, FilterExpression=filter_expression,
+                                    ExpressionAttributeNames={"#date": "date"},
+                                    ExpressionAttributeValues=expression_attribute_values)
+    _LOG.info("Reservations found: %s", response)
+
+    return True if response.get("Count") == 0 else False
+
+
 def _build_reservations_item(data):
     _LOG.info("Building reservations item from data: %s", data)
 
@@ -290,9 +317,15 @@ class ApiHandler(AbstractLambda):
                 result = _get_table_items(dynamodb_resource, table_name, _build_tables_item_func,
                                           key_condition_expression)
             elif resource_path == "/reservations" and http_method == "POST":
-                table_name = os.environ['reservations_table']
-                table_item = _build_reservations_item(body)
-                result = _post_table_item(dynamodb_client, table_name, table_item, '{"reservationId": "%s"}')
+                reservations_table_name = os.environ['reservations_table']
+                reservations_item = _build_reservations_item(body)
+                if not _is_table_availability(dynamodb_client, reservations_item["table_number"]["N"],
+                                              reservations_item["date"]["S"], reservations_item["slot_time_start"]["S"],
+                                              reservations_item["slot_time_end"]["S"]):
+                    raise Exception(f"Table is not available for reservation")
+
+                result = _post_table_item(dynamodb_client, reservations_table_name, reservations_item,
+                                          '{"reservationId": "%s"}')
             elif resource_path == "/reservations" and http_method == "GET":
                 table_name = os.environ['reservations_table']
                 result = _get_table_items(dynamodb_resource, table_name, _build_reservations_item_func)
