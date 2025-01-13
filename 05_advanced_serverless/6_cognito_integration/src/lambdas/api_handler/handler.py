@@ -116,11 +116,12 @@ def _build_tables_item(data):
 
 def _is_table_availability(dynamodb_client, table_number, date, slot_time_start, slot_time_end):
     _LOG.info("Check if table exists")
-    table_name = os.environ['tables_table']
-    table_key = {"id": {"N": table_number}}
-    table_item = dynamodb_client.get_item(TableName=table_name, Key=table_key)
-    _LOG.info("Table item: %s", table_item)
-    if table_item.get("Item") is None:
+    tables_table_name = os.environ['tables_table']
+    tables = dynamodb_client.scan(TableName=tables_table_name,
+                                  FilterExpression='table_number = :table_number',
+                                  ExpressionAttributeValues={":table_number": {"N": table_number}})
+    _LOG.info("Tables found: %s", tables)
+    if tables.get("Count") == 0:
         raise Exception(f"Table with number {table_number} does not exist")
 
     _LOG.info("Check if table is available")
@@ -133,12 +134,13 @@ def _is_table_availability(dynamodb_client, table_number, date, slot_time_start,
                                    ":slot_time_start": {"S": slot_time_start},
                                    ":slot_time_end": {"S": slot_time_end}
                                    }
-    response = dynamodb_client.scan(TableName=reservations_table_name, FilterExpression=filter_expression,
-                                    ExpressionAttributeNames={"#date": "date"},
-                                    ExpressionAttributeValues=expression_attribute_values)
-    _LOG.info("Reservations found: %s", response)
+    reservations = dynamodb_client.scan(TableName=reservations_table_name,
+                                        FilterExpression=filter_expression,
+                                        ExpressionAttributeNames={"#date": "date"},
+                                        ExpressionAttributeValues=expression_attribute_values)
+    _LOG.info("Reservations found: %s", reservations)
 
-    return True if response.get("Count") == 0 else False
+    return True if reservations.get("Count") == 0 else False
 
 
 def _build_reservations_item(data):
