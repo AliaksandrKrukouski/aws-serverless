@@ -118,8 +118,9 @@ def _is_table_availability(dynamodb_client, table_number, date, slot_time_start,
     _LOG.info("Check if table exists")
     tables_table_name = os.environ['tables_table']
     tables = dynamodb_client.scan(TableName=tables_table_name,
-                                  FilterExpression='table_number = :table_number',
-                                  ExpressionAttributeValues={":table_number": {"N": table_number}})
+                                  FilterExpression='#number = :table_number',
+                                  ExpressionAttributeNames={"#number": "number"},
+                                  ExpressionAttributeValues={":number": {"N": table_number}})
     _LOG.info("Tables found: %s", tables)
     if tables.get("Count") == 0:
         raise Exception(f"Table with number {table_number} does not exist")
